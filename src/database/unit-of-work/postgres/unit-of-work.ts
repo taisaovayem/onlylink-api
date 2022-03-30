@@ -1,7 +1,7 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
 import { Connection, EntityManager } from 'typeorm';
 import { IsolationLevel } from 'typeorm/driver/types/IsolationLevel';
-import { SAMPLE_POSTGRES_DATABASE_CONNECTION } from './constants';
+import { POSTGRES_DATABASE_CONNECTION } from './constants';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PostgresUnitOfWork {
@@ -9,7 +9,7 @@ export class PostgresUnitOfWork {
   private isolationLevel: IsolationLevel | null;
 
   constructor(
-    @Inject(SAMPLE_POSTGRES_DATABASE_CONNECTION)
+    @Inject(POSTGRES_DATABASE_CONNECTION)
     private connection: Connection,
   ) {
     this.transactionManager = null;

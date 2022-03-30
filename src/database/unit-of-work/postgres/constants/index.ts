@@ -1,1 +1,1 @@
-export * from './sample-postgres-database-connection';
+export * from './postgres-database-connection';
