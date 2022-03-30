@@ -1,14 +1,16 @@
 import { BaseRepository } from 'src/database/repositories';
 import { UserEntity } from '../entities';
-import { LoginRequest, RegisterRequest, UserResponse } from '../dtos';
+import { LoginRequest, RegisterRequest } from '../dtos';
+import { EntityRepository } from 'typeorm';
 
+@EntityRepository(UserEntity)
 export class UserRepository extends BaseRepository<UserEntity> {
   async register({
     email,
     name,
     password,
   }: RegisterRequest): Promise<UserEntity> {
-    return this.create({ email, name, password });
+    return this.save({ email, name, password });
   }
 
   async login({ email, password }: LoginRequest): Promise<UserEntity> {
