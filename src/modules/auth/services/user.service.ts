@@ -11,7 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import * as argon2 from 'argon2';
 import { UserEntity, RefreshTokenEntity } from '../entities';
-import { ApiError } from 'src/shared/errors/api-error';
 import { add } from 'date-fns';
 import { CacheService } from 'src/shared/cache';
 import {
@@ -47,7 +46,7 @@ export class UserService {
     const expired = add(new Date(), { days: 30 });
     const refreshToken = jwt.sign({ id: user.id, expired }, jwtPrivateKey);
     const userInfo = { userId: user.id };
-    await this.cacheService.set(token, JSON.stringify(userInfo));
+    await this.cacheService.setObject(token, userInfo);
     this.refreshTokenRepository.addToken(user, refreshToken, expired);
     return { token, refreshToken };
   }
@@ -60,6 +59,7 @@ export class UserService {
       { relations: ['user'] },
     );
     if (!tokenRecord) return new InvalidSessionException();
+    if (tokenRecord.expired < new Date()) return new InvalidSessionException();
     const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
     const token = jwt.sign({ id: tokenRecord.user.id }, jwtPrivateKey);
     await this.cacheService.set(token, JSON.stringify(tokenRecord.user));
@@ -112,7 +112,7 @@ export class UserService {
       };
       return reponse;
     }
-    return new EmailPasswordInvalidError()
+    return new EmailPasswordInvalidError();
   }
 
   revokeToken({ accessToken, refreshToken }: RevokeTokenRequest) {
