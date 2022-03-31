@@ -56,7 +56,11 @@ export class UserService {
     if (!tokenRecord) return new InvalidSessionException();
     const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
     const token = jwt.sign({ id: tokenRecord.user.id }, jwtPrivateKey);
-    await this.cacheService.set(token, tokenRecord.user.id);
+    await this.cacheService.set(token, JSON.stringify(tokenRecord.user));
+    await this.refreshTokenRepository.save({
+      ...tokenRecord,
+      expired: add(new Date(), { days: 30 }),
+    });
     return { accessToken: token };
   }
 
