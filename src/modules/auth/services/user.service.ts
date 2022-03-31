@@ -14,7 +14,13 @@ import { UserEntity, RefreshTokenEntity } from '../entities';
 import { ApiError } from 'src/shared/errors/api-error';
 import { add } from 'date-fns';
 import { CacheService } from 'src/shared/cache';
-import { InvalidSessionException } from '../errors';
+import {
+  InvalidSessionException,
+  EmailExistError,
+  EmailInvalidError,
+  EmailPasswordInvalidError,
+} from '../errors';
+import { isEmail } from 'class-validator';
 
 @Injectable()
 export class UserService {
@@ -65,6 +71,10 @@ export class UserService {
   }
 
   async register({ email, name, password }: RegisterRequest) {
+    if (!isEmail(email)) {
+      return new EmailInvalidError();
+    }
+
     const passwordHashed = await argon2.hash(password);
     try {
       const user = await this.userRepository.register({
@@ -73,7 +83,6 @@ export class UserService {
         password: passwordHashed,
       });
       if (user) {
-        const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
         const { token, refreshToken } = await this.generateToken(user);
         const reponse: UserResponse = {
           email: user.email,
@@ -84,10 +93,7 @@ export class UserService {
         return reponse;
       }
     } catch (error) {
-      return new ApiError({
-        status: 403,
-        message: 'Email đã tồn tại',
-      });
+      return new EmailExistError();
     }
   }
 
@@ -106,10 +112,7 @@ export class UserService {
       };
       return reponse;
     }
-    return new ApiError({
-      status: 403,
-      message: 'Email hoặc mật khẩu không đúng',
-    });
+    return new EmailPasswordInvalidError()
   }
 
   revokeToken({ accessToken, refreshToken }: RevokeTokenRequest) {
