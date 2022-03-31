@@ -16,7 +16,7 @@ export const databaseProvider = [
         database: configService.get('POSTGRES_DATABASE'),
         entities: [UserEntity, RefreshTokenEntity],
         migrations: [__dirname + '/../../../migrations/*{.ts,.js}'],
-        synchronize: true,
+        synchronize: false,
         migrationsRun: configService.get<string>('RUN_MIGRATIONS') === 'true',
         logging: true,
       });
