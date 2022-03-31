@@ -4,14 +4,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToMany,
 } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
-import { RefreshTokenEntity } from './refresh-token.entity';
+import { IsEmail } from 'class-validator';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {
   @Column({ unique: true })
+  @IsEmail()
   email!: string;
 
   @Column()
