@@ -1,25 +1,33 @@
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
 import { UserEntity } from './user.entity';
 
 @Entity('refresh_token')
 export class RefreshTokenEntity extends BaseEntity {
-  @Column({ unique: true })
+  @Column()
   token: string;
 
   @Column()
   expired: Date;
 
-  @OneToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn()
   user: UserEntity;
 
-  @Column()
-  createdAt: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
 
-  @Column()
-  updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt!: Date;
 
-  @Column()
-  deletedAt: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

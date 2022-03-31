@@ -1,3 +1,4 @@
 export * from './login.dto';
 export * from './register.dto';
-export * from './header.dto';
+export * from './revoke-token.dto';
+export * from './access-token.dto';

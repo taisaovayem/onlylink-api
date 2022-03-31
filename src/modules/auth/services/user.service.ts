@@ -1,19 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { PostgresTransactionalRepository } from 'src/database/unit-of-work/postgres';
 import { RefreshTokenRepository, UserRepository } from '../repository';
-import { LoginRequest, RegisterRequest, UserResponse } from '../dtos';
+import {
+  LoginRequest,
+  RegisterRequest,
+  RevokeTokenRequest,
+  UserResponse,
+} from '../dtos';
 import { ConfigService } from '@nestjs/config';
 import * as jwt from 'jsonwebtoken';
 import * as argon2 from 'argon2';
 import { UserEntity, RefreshTokenEntity } from '../entities';
 import { ApiError } from 'src/shared/errors/api-error';
 import { add } from 'date-fns';
+import { CacheService } from 'src/shared/cache';
+import { InvalidSessionException } from '../errors';
 
 @Injectable()
 export class UserService {
   constructor(
     private pgTransactionRepo: PostgresTransactionalRepository,
     private configService: ConfigService,
+    private cacheService: CacheService,
   ) {}
 
   get userRepository(): UserRepository {
@@ -32,8 +40,24 @@ export class UserService {
     const token = jwt.sign({ id: user.id }, jwtPrivateKey);
     const expired = add(new Date(), { days: 30 });
     const refreshToken = jwt.sign({ id: user.id, expired }, jwtPrivateKey);
+    const userInfo = { userId: user.id };
+    await this.cacheService.set(token, JSON.stringify(userInfo));
     this.refreshTokenRepository.addToken(user, refreshToken, expired);
     return { token, refreshToken };
+  }
+
+  async getAccessToken(refreshToken: string) {
+    const tokenRecord = await this.refreshTokenRepository.findOne(
+      {
+        token: refreshToken,
+      },
+      { relations: ['user'] },
+    );
+    if (!tokenRecord) return new InvalidSessionException();
+    const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
+    const token = jwt.sign({ id: tokenRecord.user.id }, jwtPrivateKey);
+    await this.cacheService.set(token, tokenRecord.user.id);
+    return { accessToken: token };
   }
 
   async register({ email, name, password }: RegisterRequest) {
@@ -84,12 +108,14 @@ export class UserService {
     });
   }
 
-  async revokeToken(token: string) {
-    return this.refreshTokenRepository.revokeToken(token);
+  revokeToken({ accessToken, refreshToken }: RevokeTokenRequest) {
+    this.refreshTokenRepository.revokeToken(refreshToken);
+    this.cacheService.delete(accessToken);
+    return { status: 200 };
   }
 
-  async revokeAllToken(token: string) {
-    const tokenInstant = await this.refreshTokenRepository.findOne({ token });
-    return this.refreshTokenRepository.revokeAllToken(tokenInstant.user);
+  async revokeAllToken(user: UserEntity) {
+    this.refreshTokenRepository.revokeAllToken(user);
+    return { status: 200 };
   }
 }

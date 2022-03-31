@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './controllers';
 import { UserService } from './services';
 import { PostgresUnitOfWorkModule } from 'src/database/unit-of-work/postgres';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RedisCacheModule, CacheService } from 'src/shared/cache';
 
 @Module({
-  imports: [PostgresUnitOfWorkModule],
+  imports: [PostgresUnitOfWorkModule, RedisCacheModule, ConfigModule],
   controllers: [AuthController],
-  providers: [UserService, ConfigService],
+  providers: [UserService],
 })
 export class AuthModule {}

@@ -1,23 +1,31 @@
-import { Entity, Column } from 'typeorm';
+import {
+  Entity,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
+import { RefreshTokenEntity } from './refresh-token.entity';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
-  @Column()
-  createdAt: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
 
-  @Column()
-  updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt!: Date;
 
-  @Column()
-  deletedAt: Date;
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

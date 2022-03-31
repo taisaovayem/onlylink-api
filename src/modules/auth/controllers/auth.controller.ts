@@ -8,39 +8,44 @@ import {
 } from '@nestjs/common';
 import { ApiError } from 'src/shared/errors';
 import {
-  HeaderRequest,
   LoginRequest,
   RegisterRequest,
   UserResponse,
+  RevokeTokenRequest,
+  AccessTokenRequest,
 } from '../dtos';
 import { AuthGuard } from '../guards';
 import { UserService } from '../services';
 
 @Injectable()
 @Controller({ version: '1' })
-@UseGuards(new AuthGuard())
 export class AuthController {
   constructor(private userService: UserService) {}
 
   @Post('register')
-  async register(
-    @Body() user: RegisterRequest,
-  ): Promise<UserResponse | ApiError> {
+  register(@Body() user: RegisterRequest): Promise<UserResponse | ApiError> {
     return this.userService.register(user);
   }
 
   @Post('login')
-  async login(@Body() user: LoginRequest): Promise<UserResponse | ApiError> {
+  login(@Body() user: LoginRequest): Promise<UserResponse | ApiError> {
     return this.userService.login(user);
   }
 
+  @Post('access-token')
+  getAccessToken(@Body() token: AccessTokenRequest) {
+    return this.userService.getAccessToken(token.refreshToken);
+  }
+
   @Post('revoke-token')
-  async revokeToken(@Headers() { refreshToken }: HeaderRequest) {
-    return this.userService.revokeToken(refreshToken);
+  @UseGuards(AuthGuard)
+  async revokeToken(@Body() revokeToken: RevokeTokenRequest) {
+    return this.userService.revokeToken(revokeToken);
   }
 
   @Post('revoke-all-token')
-  async revokeAllToken(@Headers() { refreshToken }: HeaderRequest) {
-    return this.userService.revokeAllToken(refreshToken);
+  @UseGuards(AuthGuard)
+  async revokeAllToken(@Headers() header: Headers) {
+    return this.userService.revokeAllToken(header['userId']);
   }
 }
