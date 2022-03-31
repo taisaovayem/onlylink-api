@@ -20,7 +20,23 @@ export class CacheService {
     return this.cache.get(key);
   }
 
+  setObject(key: string, value: Object, ttl: number = this.defaultTtl ?? 0) {
+    return this.cache.set(key, JSON.stringify(value), { ttl });
+  }
+
+  getObject(key: string) {
+    return this.cache
+      .get(key)
+      .then((result: string | undefined) =>
+        result ? JSON.parse(result) : undefined,
+      );
+  }
+
   delete(key: string) {
     return this.cache.del(key);
+  }
+
+  deleteAll() {
+    return this.cache.reset();
   }
 }
