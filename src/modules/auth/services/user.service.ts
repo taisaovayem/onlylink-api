@@ -18,6 +18,7 @@ import {
   EmailExistError,
   EmailInvalidError,
   EmailPasswordInvalidError,
+  EmptyFieldError,
 } from '../errors';
 import { isEmail } from 'class-validator';
 
@@ -71,6 +72,7 @@ export class UserService {
   }
 
   async register({ email, name, password }: RegisterRequest) {
+    if (!email || !name || !password) return new EmptyFieldError();
     if (!isEmail(email)) {
       return new EmailInvalidError();
     }

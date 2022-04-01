@@ -1,9 +1,6 @@
 import {
   Entity,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
 import { IsEmail } from 'class-validator';
@@ -19,13 +16,4 @@ export class UserEntity extends BaseEntity {
 
   @Column()
   password!: string;
-
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
-
-  @DeleteDateColumn()
-  deletedAt?: Date;
 }

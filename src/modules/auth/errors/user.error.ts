@@ -17,3 +17,9 @@ export class EmailPasswordInvalidError extends ApiError {
     super({ status: 400, message: 'Email hoặc mật khẩu không đúng' });
   }
 }
+
+export class EmptyFieldError extends ApiError {
+  constructor() {
+    super({ status: 400, message: 'Vui lòng nhập đầy đủ thông tin' });
+  }
+}
