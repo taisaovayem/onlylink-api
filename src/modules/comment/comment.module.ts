@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { LikeController } from './controllers';
-import { LikeService } from './services';
+import { CommentController } from './controllers';
+import { CommentService } from './services';
 import { PostgresUnitOfWorkModule } from 'src/database/unit-of-work/postgres';
 import { RedisCacheModule } from 'src/shared/cache';
 
 @Module({
   imports: [PostgresUnitOfWorkModule, RedisCacheModule],
-  controllers: [LikeController],
-  providers: [LikeService],
+  controllers: [CommentController],
+  providers: [CommentService],
 })
-export class LikeModule {}
+export class CommentModule {}

@@ -16,7 +16,7 @@ export class PostEntity extends BaseEntity {
 
   @ManyToOne(() => UserEntity)
   @JoinColumn()
-  author!: Omit<UserEntity, 'password'>;
+  author!: UserEntity;
 
   @Column()
   mode!: POST_MODE;

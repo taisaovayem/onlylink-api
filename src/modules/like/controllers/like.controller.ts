@@ -1,12 +1,10 @@
 import {
   Body,
   Controller,
-  Get,
   Injectable,
   Post,
   UseGuards,
   Headers,
-  Query,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/modules/auth/guards';
 import { LikeService } from '../services';

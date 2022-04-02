@@ -17,6 +17,7 @@ import {
   NotPermissionViewError,
   NotPermissonDeleteError,
 } from '../errors';
+import { getUserInfo } from 'src/modules/auth/helpers';
 
 const CACHE_5_MINUTES = 5;
 
@@ -67,15 +68,7 @@ export class PostService {
         return tag;
       }),
     );
-    const author = {
-      id: post.author.id,
-      name: post.author.name,
-      email: post.author.email,
-      status: post.author.status,
-      createdAt: post.author.createdAt,
-      updatedAt: post.author.updatedAt,
-      deletedAd: post.author.deletedAt,
-    };
+    const author = getUserInfo(post.author);
     return { ...post, author, tags: newPostTag };
   }
 
