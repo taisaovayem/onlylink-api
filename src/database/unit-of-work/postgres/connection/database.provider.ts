@@ -2,12 +2,8 @@ import { Connection, createConnection } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { POSTGRES_DATABASE_CONNECTION } from '../constants';
 import { UserEntity, RefreshTokenEntity } from 'src/modules/auth/entities';
-import {
-  LikeEntity,
-  PostEntity,
-  TagEntity,
-  ViewEntity,
-} from 'src/modules/post/entities';
+import { PostEntity, TagEntity, ViewEntity } from 'src/modules/post/entities';
+import { LikeEntity } from 'src/modules/like/entities';
 
 export const databaseProvider = [
   {

@@ -1,6 +1,6 @@
 import { Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
-import { PostEntity } from './post.entity';
+import { PostEntity } from '../../post/entities/post.entity';
 import { UserEntity } from 'src/modules/auth/entities';
 
 @Entity('like')

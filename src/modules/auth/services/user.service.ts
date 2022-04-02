@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostgresTransactionalRepository } from 'src/database/unit-of-work/postgres';
-import { RefreshTokenRepository, UserRepository } from '../repository';
+import { RefreshTokenRepository, UserRepository } from '../repositories';
 import {
   LoginRequest,
   RegisterRequest,
