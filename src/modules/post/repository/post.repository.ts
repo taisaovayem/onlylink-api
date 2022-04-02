@@ -1,25 +1,34 @@
 import { BaseRepository } from 'src/database/repositories';
 import { PostEntity, TagEntity } from '../entities';
-import { EntityRepository, Like } from 'typeorm';
+import { EntityRepository, In, Like } from 'typeorm';
 import { PostRequest } from '../dtos';
 import { UserEntity } from 'src/modules/auth/entities';
 import { POST_MODE_CONDITION } from '../constants';
+import { hideLink } from '../helpers';
 
 @EntityRepository(PostEntity)
 export class PostRepository extends BaseRepository<PostEntity> {
+  protected hideLinkResultList(result: PostEntity[], total: number) {
+    return {
+      data: result.map((post: PostEntity) => ({
+        ...post,
+        link: post.link ? hideLink(post.link) : post.link,
+      })),
+      total,
+    };
+  }
+
   async getPost(id: string) {
-    return this.findOne(id);
+    return this.findOne(id, { relations: ['author', 'tags'] });
   }
 
   async getPosts(page: number = 1, perPage: number = 10) {
     const [result, total] = await this.findAndCount({
       take: perPage,
       skip: perPage * (page - 1),
+      relations: ['author', 'tags'],
     });
-    return {
-      data: result,
-      total,
-    };
+    return this.hideLinkResultList(result, total);
   }
 
   async getPostByUser(
@@ -35,11 +44,10 @@ export class PostRepository extends BaseRepository<PostEntity> {
         where: {
           author: userId,
         },
+        relations: ['author', 'tags'],
       });
-      return {
-        data: result,
-        total,
-      };
+      console.log(this.hideLinkResultList(result, total));
+      return this.hideLinkResultList(result, total);
     }
     const [result, total] = await this.findAndCount({
       take: perPage,
@@ -48,11 +56,9 @@ export class PostRepository extends BaseRepository<PostEntity> {
         author: userId,
         mode,
       },
+      relations: ['author', 'tags'],
     });
-    return {
-      data: result,
-      total,
-    };
+    return this.hideLinkResultList(result, total);
   }
 
   async getPostByTag(tag: TagEntity, page: number = 1, perPage: number = 10) {
@@ -61,13 +67,11 @@ export class PostRepository extends BaseRepository<PostEntity> {
       skip: perPage * (page - 1),
       where: {
         mode: POST_MODE_CONDITION.PUBLIC,
-        tags: Like(`%${tag}%`),
+        tags: In([tag]),
       },
+      relations: ['author', 'tags'],
     });
-    return {
-      data: result,
-      total,
-    };
+    return this.hideLinkResultList(result, total);
   }
 
   savePost(post: PostRequest, author: UserEntity, tags?: TagEntity[]) {
@@ -83,11 +87,9 @@ export class PostRepository extends BaseRepository<PostEntity> {
   }
 
   getLink(postId: string) {
-    return this.findOne({
-      select: ['link'],
-      where: {
-        id: postId,
-      },
+    return this.findOne(postId, {
+      select: ['link', 'author'],
+      relations: ['author', 'tags'],
     });
   }
 }

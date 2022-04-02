@@ -4,12 +4,25 @@ import { TagEntity } from '../entities';
 
 @EntityRepository(TagEntity)
 export class TagRepository extends BaseRepository<TagEntity> {
-  getTag(tagId: string) {
-    return this.findOne(tagId);
+  getTag(tag: string) {
+    return this.findOne({
+      where: [
+        {
+          id: tag,
+        },
+        {
+          name: tag,
+        },
+      ],
+    });
   }
 
   getTagByName(tagName: string) {
-    return this.findOne({ name: tagName });
+    return this.findOne({
+      where: {
+        name: tagName,
+      },
+    });
   }
 
   saveTag(tagName: string) {

@@ -10,4 +10,10 @@ export class PostResponse {
   tag?: TagEntity[];
   author: UserEntity;
   mode: POST_MODE;
+  view: number;
+  like: number;
+}
+
+export class LinkResponse {
+  link: string;
 }

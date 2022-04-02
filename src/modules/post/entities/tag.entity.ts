@@ -1,10 +1,8 @@
-import {
-  Entity,
-  Column,
-} from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
+import { PostEntity } from './post.entity';
 
-@Entity('post')
+@Entity('tag')
 export class TagEntity extends BaseEntity {
   @Column({ unique: true })
   name!: string;

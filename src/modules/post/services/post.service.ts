@@ -7,77 +7,123 @@ import { LikeEntity, PostEntity, TagEntity, ViewEntity } from '../entities';
 import { PostRepository, TagRepository, ViewRepository } from '../repository';
 import { LikeRepository } from '../repository/like.repository';
 import { POST_MODE_CONDITION } from '../constants';
-import { PostRequest } from '../dtos';
+import { PostRequest, PostResponse } from '../dtos';
 import { UserEntity } from 'src/modules/auth/entities';
 import { UserRepository } from 'src/modules/auth/repository';
+import { CacheService } from 'src/shared/cache';
+import { NotPermissionViewError } from '../errors';
+import { hideLink } from '../helpers';
+
+const CACHE_5_MINUTES = 5;
 
 @Injectable()
 export class PostService {
   constructor(
     private pgTransactionRepo: PostgresTransactionalRepository,
     private postgrestUnitOfWork: PostgresUnitOfWork,
+    private cacheService: CacheService,
   ) {}
 
   get postRepository(): PostRepository {
     return this.pgTransactionRepo.getRepository<PostEntity>(
-      PostEntity,
+      PostRepository,
     ) as PostRepository;
   }
   get tagRepository(): TagRepository {
     return this.pgTransactionRepo.getRepository<TagEntity>(
-      TagEntity,
+      TagRepository,
     ) as TagRepository;
   }
   get viewRepository(): ViewRepository {
     return this.pgTransactionRepo.getRepository<ViewEntity>(
-      ViewEntity,
+      ViewRepository,
     ) as ViewRepository;
   }
   get likeRepository(): LikeRepository {
     return this.pgTransactionRepo.getRepository<LikeEntity>(
-      LikeEntity,
+      LikeRepository,
     ) as LikeRepository;
   }
   get userRepository(): UserRepository {
     return this.pgTransactionRepo.getRepository<UserEntity>(
-      UserEntity,
+      UserRepository,
     ) as UserRepository;
   }
 
-  hideDomain(domain: string) {
-    const arr = domain.split('');
-    for (let i = 2; i < arr.length; i++) {
-      arr[i] = '*';
+  async getLink(postId: string, userId: string) {
+    const getLink = async (postId: string) => {
+      const linkCached = await this.cacheService.getObject(`link_${postId}`);
+      if (linkCached) return linkCached as PostEntity;
+      const link = await this.postRepository.getLink(postId);
+      this.cacheService.setObject(`link_${postId}`, link);
+      return link;
+    };
+    const post = await getLink(postId);
+    if (post.author.id !== userId) {
+      return new NotPermissionViewError();
     }
-    return arr.join('');
+    return { link: post.link };
   }
 
-  hideLink(link: string) {
-    const regex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)/; // only get origin
-    const linkSplit = link.match(regex)[0].split('.');
-    if (linkSplit[0].includes('www')) {
-      linkSplit[1] = this.hideDomain(linkSplit[1]).concat('***');
-    } else {
-      linkSplit[0] = this.hideDomain(linkSplit[0]).concat('***');
+  async getPost(postId: string, userId: string) {
+    const getPost = async (postId: string) => {
+      const postCached = (await this.cacheService.getObject(
+        `post_${postId}`,
+      )) as PostEntity;
+      if (postCached) return postCached;
+      const post = await this.postRepository.getPost(postId);
+      this.cacheService.setObject(`post_${postId}`, post);
+      return post;
+    };
+    const post = await getPost(postId);
+    if (post.author.id !== userId) {
+      return new NotPermissionViewError();
     }
-    return linkSplit.join('.');
-  }
 
-  getLink(postId: string) {
-    return this.postRepository.getLink(postId);
-  }
+    const getView = async (post: PostEntity) => {
+      const viewCached = +(await this.cacheService.get(
+        `view_${post.id}`,
+      )) as number;
+      if (viewCached) return viewCached;
+      const view = await this.viewRepository.count({
+        where: {
+          post,
+        },
+      });
+      this.cacheService.set(
+        `view_${post.id}`,
+        view.toString(),
+        CACHE_5_MINUTES,
+      );
+      return view;
+    };
+    const view = await getView(post);
 
-  async getPost(postId: string) {
-    const post = await this.postRepository.getPost(postId);
-    const view = await this.viewRepository.count({
-      where: {
-        post,
-      },
-    });
-    const like = await this.likeRepository.likeByPost(post);
+    const getLike = async (post: PostEntity) => {
+      const likeCached = +(await this.cacheService.get(
+        `like_${post.id}`,
+      )) as number;
+      if (likeCached) return likeCached;
+      const like = await this.likeRepository.likeByPost(post);
+      this.cacheService.set(
+        `like_${post.id}`,
+        like.toString(),
+        CACHE_5_MINUTES,
+      );
+      return like;
+    };
+    const like = await getLike(post);
+
     if (post.link) {
-      post.link = this.hideLink(post.link);
+      post.link = hideLink(post.link);
     }
+
+    const addView = async () => {
+      const user = await this.userRepository.findOne(userId);
+      this.viewRepository.addView(post, user);
+    };
+    addView();
+
     return {
       ...post,
       view,
@@ -122,11 +168,19 @@ export class PostService {
           }
         }),
       );
-      return this.postRepository.savePost(post, user, tags);
+      const newPost = await this.postRepository.savePost(post, user, tags);
+      this.cacheService.setObject(`post_${newPost.id}`, newPost);
+      return newPost;
     });
   }
 
+  async getPostByTag(tag: string, page: number = 1, perPage: number = 10) {
+    const tagEntity = await this.tagRepository.getTag(tag);
+    return this.postRepository.getPostByTag(tagEntity, page, perPage);
+  }
+
   deletePost(postId: string) {
+    this.cacheService.delete(`post_${postId}`);
     return this.postRepository.deletePost(postId);
   }
 }

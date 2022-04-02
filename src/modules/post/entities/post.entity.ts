@@ -1,14 +1,9 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
 import { UserEntity } from 'src/modules/auth/entities';
 import { POST_MODE } from '../constants';
 import { TagEntity } from './tag.entity';
+import { TagRelationPostEntity } from './tag-relation-post.entity';
 
 @Entity('post')
 export class PostEntity extends BaseEntity {
@@ -28,7 +23,7 @@ export class PostEntity extends BaseEntity {
   @Column()
   mode!: POST_MODE;
 
-  @ManyToMany(() => TagEntity, (tag) => tag.id)
+  @OneToMany(() => TagRelationPostEntity, (tag) => tag.post)
   @JoinColumn()
-  tags?: TagEntity[];
+  tags?: TagRelationPostEntity[];
 }

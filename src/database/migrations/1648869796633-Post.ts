@@ -1,11 +1,15 @@
-import { UserStatus } from 'src/modules/auth/constants';
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
-export class User1648719016979 implements MigrationInterface {
+export class Post1648869796633 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'user',
+        name: 'post',
         columns: [
           {
             name: 'id',
@@ -16,23 +20,27 @@ export class User1648719016979 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'email',
+            name: 'code',
             type: 'varchar',
-            isNullable: false,
-            isUnique: true,
+            isNullable: true,
           },
           {
-            name: 'name',
+            name: 'link',
             type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'description',
+            type: 'varchar',
+            isNullable: true,
+          },
+          {
+            name: 'authorId',
+            type: 'uuid',
             isNullable: false,
           },
           {
-            name: 'password',
-            type: 'varchar',
-            isNullable: false,
-          },
-          {
-            name: 'status',
+            name: 'mode',
             type: 'varchar',
             isNullable: false,
           },
@@ -55,6 +63,14 @@ export class User1648719016979 implements MigrationInterface {
             isNullable: true,
           },
         ],
+      }),
+    );
+    await queryRunner.createForeignKey(
+      'post',
+      new TableForeignKey({
+        columnNames: ['authorId'],
+        referencedTableName: 'user',
+        referencedColumnNames: ['id'],
       }),
     );
   }

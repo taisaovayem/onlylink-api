@@ -125,6 +125,7 @@ export class UserService {
 
   async revokeAllToken(user: UserEntity) {
     this.refreshTokenRepository.revokeAllToken(user);
+    this.cacheService.deleteAll();
     return { status: 200 };
   }
 }
