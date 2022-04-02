@@ -6,7 +6,7 @@ import {
 import { LikeEntity, PostEntity, TagEntity, ViewEntity } from '../entities';
 import { PostRepository, TagRepository, ViewRepository } from '../repository';
 import { LikeRepository } from '../repository/like.repository';
-import { POST_MODE_CONDITION } from '../constants';
+import { POST_MODE, POST_MODE_CONDITION } from '../constants';
 import { PostRequest, PostResponse } from '../dtos';
 import { UserEntity } from 'src/modules/auth/entities';
 import { UserRepository } from 'src/modules/auth/repository';
@@ -50,6 +50,22 @@ export class PostService {
     ) as UserRepository;
   }
 
+  async mapPost(post: PostEntity) {
+    /** map tags id to tags entity in post object */
+    if (!post.tags) return post;
+    const newPostTagsArr = JSON.parse(post.tags);
+    const newPostTag = await Promise.all(
+      newPostTagsArr.map(async (tagId: string) => {
+        const tagCached = await this.cacheService.getObject(`tag_${tagId}`);
+        if (tagCached) return tagCached;
+        const tag = await this.tagRepository.getTag(tagId);
+        this.cacheService.setObject(`tag_${tagId}`, tag);
+        return tag;
+      }),
+    );
+    return { ...post, tags: newPostTag };
+  }
+
   async getLink(postId: string, userId: string) {
     const getLink = async (postId: string) => {
       const linkCached = await this.cacheService.getObject(`link_${postId}`);
@@ -66,16 +82,33 @@ export class PostService {
   }
 
   async getPost(postId: string, userId: string) {
+    type PostMapped = {
+      code?: string;
+      link?: string;
+      description?: string;
+      author: UserEntity;
+      mode: POST_MODE;
+      tags?: TagEntity[];
+    };
     const getPost = async (postId: string) => {
       const postCached = (await this.cacheService.getObject(
         `post_${postId}`,
-      )) as PostEntity;
-      if (postCached) return postCached;
+      )) as PostMapped;
+      if (postCached)
+        return {
+          post: postCached,
+          postRaw: {
+            ...postCached,
+            tags: postCached.tags.map((tag) => tag.id),
+          } as unknown as PostEntity,
+        };
+
       const post = await this.postRepository.getPost(postId);
-      this.cacheService.setObject(`post_${postId}`, post);
-      return post;
+      const postMapped = await this.mapPost(post);
+      this.cacheService.setObject(`post_${postId}`, postMapped);
+      return { post: postMapped, postRaw: post };
     };
-    const post = await getPost(postId);
+    const { post, postRaw } = await getPost(postId);
     if (post.author.id !== userId) {
       return new NotPermissionViewError();
     }
@@ -97,7 +130,7 @@ export class PostService {
       );
       return view;
     };
-    const view = await getView(post);
+    const view = await getView(postRaw);
 
     const getLike = async (post: PostEntity) => {
       const likeCached = +(await this.cacheService.get(
@@ -112,7 +145,7 @@ export class PostService {
       );
       return like;
     };
-    const like = await getLike(post);
+    const like = await getLike(postRaw);
 
     if (post.link) {
       post.link = hideLink(post.link);
@@ -120,7 +153,7 @@ export class PostService {
 
     const addView = async () => {
       const user = await this.userRepository.findOne(userId);
-      this.viewRepository.addView(post, user);
+      this.viewRepository.addView(postRaw, user);
     };
     addView();
 
@@ -131,52 +164,72 @@ export class PostService {
     };
   }
 
-  getPostByUser(userId: string, page: number = 1, perPage: number = 10) {
-    return this.postRepository.getPostByUser(
+  async getPostByUser(userId: string, page: number = 1, perPage: number = 10) {
+    const posts = await this.postRepository.getPostByUser(
       userId,
       POST_MODE_CONDITION.PUBLIC,
       page,
       perPage,
     );
+    return {
+      data: await Promise.all(
+        posts.data.map(async (post) => await this.mapPost(post)),
+      ),
+      total: posts.total,
+    };
   }
 
-  getMyPost(
+  async getMyPost(
     userId: string,
     page: number = 1,
     perPage: number = 10,
     mode?: POST_MODE_CONDITION,
   ) {
-    return this.postRepository.getPostByUser(
+    const posts = await this.postRepository.getPostByUser(
       userId,
       mode ?? POST_MODE_CONDITION.ALL,
       page,
       perPage,
     );
+    return {
+      data: await Promise.all(
+        posts.data.map(async (post) => await this.mapPost(post)),
+      ),
+      total: posts.total,
+    };
   }
 
   async savePost(post: PostRequest, userId: string) {
     this.postgrestUnitOfWork.setIsolationLevel('SERIALIZABLE');
     return this.postgrestUnitOfWork.withTransaction(async () => {
       const user = await this.userRepository.findOne(userId);
-      const tags = await Promise.all(
-        post.tags.map(async (tagName: string) => {
-          const found = await this.tagRepository.getTagByName(tagName);
-          if (found) {
-            return found;
-          } else {
-            return await this.tagRepository.saveTag(tagName);
-          }
-        }),
-      );
+      const tags = post.tags
+        ? await Promise.all(
+            post.tags.map(async (tagName: string) => {
+              const found = await this.tagRepository.getTagByName(tagName);
+              if (found) {
+                return found;
+              } else {
+                return await this.tagRepository.saveTag(tagName);
+              }
+            }),
+          )
+        : [];
       const newPost = await this.postRepository.savePost(post, user, tags);
-      this.cacheService.setObject(`post_${newPost.id}`, newPost);
-      return newPost;
+      const newPostWithTags = await this.mapPost(newPost);
+      this.cacheService.setObject(`post_${newPost.id}`, newPostWithTags);
+      return newPostWithTags;
     });
   }
 
   async getPostByTag(tag: string, page: number = 1, perPage: number = 10) {
-    const tagEntity = await this.tagRepository.getTag(tag);
-    return this.postRepository.getPostByTag(tagEntity, page, perPage);
+    const posts = await this.postRepository.getPostByTag(tag, page, perPage);
+    return {
+      data: await Promise.all(
+        posts.data.map(async (post) => await this.mapPost(post)),
+      ),
+      total: posts.total,
+    };
   }
 
   deletePost(postId: string) {

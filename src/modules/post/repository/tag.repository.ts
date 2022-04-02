@@ -6,6 +6,7 @@ import { TagEntity } from '../entities';
 export class TagRepository extends BaseRepository<TagEntity> {
   getTag(tag: string) {
     return this.findOne({
+      select: ['id', 'name'],
       where: [
         {
           id: tag,

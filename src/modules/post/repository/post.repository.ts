@@ -19,14 +19,14 @@ export class PostRepository extends BaseRepository<PostEntity> {
   }
 
   async getPost(id: string) {
-    return this.findOne(id, { relations: ['author', 'tags'] });
+    return this.findOne(id, { relations: ['author'] });
   }
 
   async getPosts(page: number = 1, perPage: number = 10) {
     const [result, total] = await this.findAndCount({
       take: perPage,
       skip: perPage * (page - 1),
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
     return this.hideLinkResultList(result, total);
   }
@@ -44,9 +44,8 @@ export class PostRepository extends BaseRepository<PostEntity> {
         where: {
           author: userId,
         },
-        relations: ['author', 'tags'],
+        relations: ['author'],
       });
-      console.log(this.hideLinkResultList(result, total));
       return this.hideLinkResultList(result, total);
     }
     const [result, total] = await this.findAndCount({
@@ -56,20 +55,20 @@ export class PostRepository extends BaseRepository<PostEntity> {
         author: userId,
         mode,
       },
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
     return this.hideLinkResultList(result, total);
   }
 
-  async getPostByTag(tag: TagEntity, page: number = 1, perPage: number = 10) {
+  async getPostByTag(tagId: string, page: number = 1, perPage: number = 10) {
     const [result, total] = await this.findAndCount({
       take: perPage,
       skip: perPage * (page - 1),
       where: {
         mode: POST_MODE_CONDITION.PUBLIC,
-        tags: In([tag]),
+        tags: Like(`%${tagId}%`),
       },
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
     return this.hideLinkResultList(result, total);
   }
@@ -78,7 +77,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
     return this.save({
       ...post,
       author,
-      tags,
+      tags: JSON.stringify(tags.map((tag: TagEntity) => tag.id)),
     });
   }
 
@@ -89,7 +88,7 @@ export class PostRepository extends BaseRepository<PostEntity> {
   getLink(postId: string) {
     return this.findOne(postId, {
       select: ['link', 'author'],
-      relations: ['author', 'tags'],
+      relations: ['author'],
     });
   }
 }

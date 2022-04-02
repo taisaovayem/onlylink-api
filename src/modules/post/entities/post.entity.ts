@@ -3,7 +3,6 @@ import { BaseEntity } from 'src/database/entities';
 import { UserEntity } from 'src/modules/auth/entities';
 import { POST_MODE } from '../constants';
 import { TagEntity } from './tag.entity';
-import { TagRelationPostEntity } from './tag-relation-post.entity';
 
 @Entity('post')
 export class PostEntity extends BaseEntity {
@@ -23,7 +22,6 @@ export class PostEntity extends BaseEntity {
   @Column()
   mode!: POST_MODE;
 
-  @OneToMany(() => TagRelationPostEntity, (tag) => tag.post)
-  @JoinColumn()
-  tags?: TagRelationPostEntity[];
+  @Column()
+  tags?: string;
 }

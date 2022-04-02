@@ -3,6 +3,9 @@ import { POST_MODE } from '../../constants';
 
 export class PostRequest {
   @IsOptional()
+  id?: string;
+
+  @IsOptional()
   code: string;
 
   @IsOptional()
