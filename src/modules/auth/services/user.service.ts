@@ -18,6 +18,7 @@ import {
   EmailExistError,
   EmailInvalidError,
   EmailPasswordInvalidError,
+  EmptyFieldError,
 } from '../errors';
 import { isEmail } from 'class-validator';
 
@@ -71,6 +72,7 @@ export class UserService {
   }
 
   async register({ email, name, password }: RegisterRequest) {
+    if (!email || !name || !password) return new EmptyFieldError();
     if (!isEmail(email)) {
       return new EmailInvalidError();
     }
@@ -121,8 +123,23 @@ export class UserService {
     return { status: 200 };
   }
 
-  async revokeAllToken(user: UserEntity) {
+  revokeAllToken(user: UserEntity) {
     this.refreshTokenRepository.revokeAllToken(user);
+    this.cacheService.deleteAll();
     return { status: 200 };
+  }
+
+  async changePassword(userId: string, password: string) {
+    const passwordHashed = await argon2.hash(password);
+    return this.userRepository.changePassword(userId, passwordHashed);
+  }
+
+  async updateInfo(userId, info: Omit<LoginRequest, 'password'>) {
+    const user = await this.userRepository.findOne(userId);
+    return this.userRepository.save({
+      ...user,
+      ...info,
+      password: user.password, // catch override password
+    });
   }
 }

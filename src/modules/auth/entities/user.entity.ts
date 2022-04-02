@@ -1,12 +1,7 @@
-import {
-  Entity,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-} from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
 import { IsEmail } from 'class-validator';
+import { UserStatus } from '../constants';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {
@@ -20,12 +15,6 @@ export class UserEntity extends BaseEntity {
   @Column()
   password!: string;
 
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
-
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  @Column()
+  status!: UserStatus;
 }
