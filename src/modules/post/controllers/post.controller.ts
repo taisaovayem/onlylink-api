@@ -8,8 +8,9 @@ import {
   Get,
   Param,
   ParamData,
-  Header,
   Query,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/modules/auth/guards';
 import { PostResponse, LinkResponse, PostRequest } from '../dtos';
@@ -73,5 +74,23 @@ export class PostController {
   @UseGuards(AuthGuard)
   addPost(@Body() post: PostRequest, @Headers() header: Headers) {
     return this.postService.savePost(post, header['userId']);
+  }
+
+  @Put('post/:id')
+  @UseGuards(AuthGuard)
+  editPost(
+    @Body() post: PostRequest,
+    @Headers() header: Headers,
+    @Param() params: ParamData,
+  ) {
+    return this.postService.savePost(
+      { ...post, id: params['id'] },
+      header['userId'],
+    );
+  }
+  @Delete('post/:id')
+  @UseGuards(AuthGuard)
+  deletePost(@Headers() header: Headers, @Param() params: ParamData) {
+    return this.postService.deletePost(params['id'], header['userId']);
   }
 }

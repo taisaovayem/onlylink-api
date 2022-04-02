@@ -11,7 +11,11 @@ import { PostRequest, PostResponse } from '../dtos';
 import { UserEntity } from 'src/modules/auth/entities';
 import { UserRepository } from 'src/modules/auth/repository';
 import { CacheService } from 'src/shared/cache';
-import { NotPermissionViewError } from '../errors';
+import {
+  DeleteError,
+  NotPermissionViewError,
+  NotPermissonDeleteError,
+} from '../errors';
 import { hideLink } from '../helpers';
 
 const CACHE_5_MINUTES = 5;
@@ -109,7 +113,7 @@ export class PostService {
       return { post: postMapped, postRaw: post };
     };
     const { post, postRaw } = await getPost(postId);
-    if (post.author.id !== userId) {
+    if (post.author.id !== userId && post.mode === POST_MODE.PRIVATE) {
       return new NotPermissionViewError();
     }
 
@@ -232,8 +236,17 @@ export class PostService {
     };
   }
 
-  deletePost(postId: string) {
-    this.cacheService.delete(`post_${postId}`);
-    return this.postRepository.deletePost(postId);
+  async deletePost(postId: string, userId: string) {
+    const post = await this.postRepository.getPost(postId);
+    if (post.author.id !== userId) {
+      return new NotPermissonDeleteError();
+    }
+    if (post) this.cacheService.delete(`post_${postId}`);
+    const deleted = await this.postRepository.deletePost(postId);
+    if (deleted.affected === 1) {
+      return { status: 200, message: 'Xóa thành công' };
+    } else {
+      return new DeleteError();
+    }
   }
 }
