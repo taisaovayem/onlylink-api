@@ -1,3 +1,5 @@
+import { PostEntity } from '../entities';
+
 function hideDomain(domain: string) {
   const arr = domain.split('');
   if (arr[4] === 's') {
@@ -15,6 +17,8 @@ function hideDomain(domain: string) {
 }
 
 export function hideLink(link: string) {
+  if (!link || !link.length) return '';
+  console.log('link', link);
   const regex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)/; // only get origin
   const linkSplit = link.match(regex)[0].split('.');
   if (linkSplit[0].includes('www')) {
@@ -23,4 +27,14 @@ export function hideLink(link: string) {
     linkSplit[0] = hideDomain(linkSplit[0]);
   }
   return linkSplit.join('.').concat('/***');
+}
+
+export function hideLinkResultList(result: PostEntity[], total: number) {
+  return {
+    data: result.map((post: PostEntity) => ({
+      ...post,
+      link: post.link ? hideLink(post.link) : post.link,
+    })),
+    total,
+  };
 }

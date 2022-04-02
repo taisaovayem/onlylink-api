@@ -1,8 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, AfterLoad } from 'typeorm';
 import { BaseEntity } from 'src/database/entities';
 import { UserEntity } from 'src/modules/auth/entities';
 import { POST_MODE } from '../constants';
-import { TagEntity } from './tag.entity';
 
 @Entity('post')
 export class PostEntity extends BaseEntity {
@@ -17,7 +16,7 @@ export class PostEntity extends BaseEntity {
 
   @ManyToOne(() => UserEntity)
   @JoinColumn()
-  author!: UserEntity;
+  author!: Omit<UserEntity, 'password'>;
 
   @Column()
   mode!: POST_MODE;

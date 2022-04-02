@@ -50,6 +50,16 @@ export class PostController {
     );
   }
 
+  @Get('post/liked')
+  @UseGuards(AuthGuard)
+  getPostLiked(@Headers() header: Headers, @Query() query) {
+    return this.postService.getPostLiked(
+      header['userId'],
+      query['page'],
+      query['perPage'],
+    );
+  }
+
   @Get('post/user/:userId')
   @UseGuards(AuthGuard)
   getPostByUser(@Param() params: ParamData, @Query() query) {

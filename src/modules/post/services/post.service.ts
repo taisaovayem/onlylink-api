@@ -3,20 +3,20 @@ import {
   PostgresTransactionalRepository,
   PostgresUnitOfWork,
 } from 'src/database/unit-of-work/postgres';
-import { LikeEntity, PostEntity, TagEntity, ViewEntity } from '../entities';
-import { PostRepository, TagRepository, ViewRepository } from '../repository';
-import { LikeRepository } from '../repository/like.repository';
+import { PostEntity, TagEntity, ViewEntity } from '../entities';
+import { LikeEntity } from 'src/modules/like/entities';
+import { PostRepository, TagRepository, ViewRepository } from '../repositories';
+import { LikeRepository } from 'src/modules/like/repositories';
 import { POST_MODE, POST_MODE_CONDITION } from '../constants';
-import { PostRequest, PostResponse } from '../dtos';
+import { PostRequest } from '../dtos';
 import { UserEntity } from 'src/modules/auth/entities';
-import { UserRepository } from 'src/modules/auth/repository';
+import { UserRepository } from 'src/modules/auth/repositories';
 import { CacheService } from 'src/shared/cache';
 import {
   DeleteError,
   NotPermissionViewError,
   NotPermissonDeleteError,
 } from '../errors';
-import { hideLink } from '../helpers';
 
 const CACHE_5_MINUTES = 5;
 
@@ -67,7 +67,16 @@ export class PostService {
         return tag;
       }),
     );
-    return { ...post, tags: newPostTag };
+    const author = {
+      id: post.author.id,
+      name: post.author.name,
+      email: post.author.email,
+      status: post.author.status,
+      createdAt: post.author.createdAt,
+      updatedAt: post.author.updatedAt,
+      deletedAd: post.author.deletedAt,
+    };
+    return { ...post, author, tags: newPostTag };
   }
 
   async getLink(postId: string, userId: string) {
@@ -150,10 +159,6 @@ export class PostService {
       return like;
     };
     const like = await getLike(postRaw);
-
-    if (post.link) {
-      post.link = hideLink(post.link);
-    }
 
     const addView = async () => {
       const user = await this.userRepository.findOne(userId);
@@ -248,5 +253,21 @@ export class PostService {
     } else {
       return new DeleteError();
     }
+  }
+
+  async getPostLiked(userId: string, page: number, perPage: number) {
+    const { data, total } = await this.likeRepository.likeByUser(
+      userId,
+      POST_MODE_CONDITION.ALL,
+      page,
+      perPage,
+    );
+
+    return {
+      data: await Promise.all(
+        data.map(async (post) => await this.mapPost(post)),
+      ),
+      total,
+    };
   }
 }
