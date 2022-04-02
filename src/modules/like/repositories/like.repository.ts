@@ -18,19 +18,6 @@ export class LikeRepository extends BaseRepository<LikeEntity> {
     page: number = 1,
     perPage: number = 10,
   ) {
-    // return this.findAndCount({
-    //   take: perPage,
-    //   skip: perPage * (page - 1),
-    //   where: {
-    //     user,
-    //   },
-    //   join: {
-    //     innerJoin: {
-
-    //     }
-    //   }
-    // });
-
     if (mode === POST_MODE_CONDITION.ALL) {
       const [result, total] = await this.createQueryBuilder('like')
         .leftJoinAndSelect('like.post', 'post', 'like.post = post.id')

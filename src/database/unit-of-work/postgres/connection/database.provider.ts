@@ -4,6 +4,7 @@ import { POSTGRES_DATABASE_CONNECTION } from '../constants';
 import { UserEntity, RefreshTokenEntity } from 'src/modules/auth/entities';
 import { PostEntity, TagEntity, ViewEntity } from 'src/modules/post/entities';
 import { LikeEntity } from 'src/modules/like/entities';
+import { CommentEntity } from 'src/modules/comment/entities';
 
 export const databaseProvider = [
   {
@@ -23,6 +24,7 @@ export const databaseProvider = [
           PostEntity,
           TagEntity,
           ViewEntity,
+          CommentEntity,
         ],
         migrations: [__dirname + '/../../../migrations/*{.ts,.js}'],
         // synchronize: false,

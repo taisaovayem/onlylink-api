@@ -64,13 +64,16 @@ export class PostRepository extends BaseRepository<PostEntity> {
     return hideLinkResultList(result, total);
   }
 
-  savePost(post: PostRequest, author: UserEntity, tags?: TagEntity[]) {
-    return this.save({
+  async savePost(post: PostRequest, author: UserEntity, tags?: TagEntity[]) {
+    const result = await this.save({
       ...post,
       author,
-      link: hideLink(post.link),
       tags: JSON.stringify(tags.map((tag: TagEntity) => tag.id)),
     });
+    return {
+      ...result,
+      link: hideLink(result.link),
+    };
   }
 
   deletePost(postId: string) {
