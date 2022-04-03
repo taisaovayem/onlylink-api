@@ -5,6 +5,7 @@ import { UserEntity, RefreshTokenEntity } from 'src/modules/auth/entities';
 import { PostEntity, TagEntity, ViewEntity } from 'src/modules/post/entities';
 import { LikeEntity } from 'src/modules/like/entities';
 import { CommentEntity } from 'src/modules/comment/entities';
+import { ListEntity, ListItemEntity } from 'src/modules/list/entities';
 
 export const databaseProvider = [
   {
@@ -25,6 +26,8 @@ export const databaseProvider = [
           TagEntity,
           ViewEntity,
           CommentEntity,
+          ListEntity,
+          ListItemEntity,
         ],
         migrations: [__dirname + '/../../../migrations/*{.ts,.js}'],
         // synchronize: false,

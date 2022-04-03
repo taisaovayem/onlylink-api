@@ -1,4 +1,5 @@
 import { PostEntity } from '../entities';
+import { getUserInfo } from 'src/modules/auth/helpers';
 
 function hideDomain(domain: string) {
   const arr = domain.split('');
@@ -18,7 +19,6 @@ function hideDomain(domain: string) {
 
 export function hideLink(link: string) {
   if (!link || !link.length) return '';
-  console.log('link', link);
   const regex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)/; // only get origin
   const linkSplit = link.match(regex)[0].split('.');
   if (linkSplit[0].includes('www')) {
@@ -34,7 +34,8 @@ export function hideLinkResultList(result: PostEntity[], total: number) {
     data: result.map((post: PostEntity) => ({
       ...post,
       link: post.link ? hideLink(post.link) : post.link,
-    })),
+      author: getUserInfo(post.author),
+    })) as unknown as PostEntity[],
     total,
   };
 }

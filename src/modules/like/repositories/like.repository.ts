@@ -37,11 +37,15 @@ export class LikeRepository extends BaseRepository<LikeEntity> {
     }
 
     const [result, total] = await this.createQueryBuilder('like')
-      .innerJoin('like.post', 'post', 'like.post = post.id')
+      .leftJoinAndSelect('like.post', 'post', 'like.post = post.id')
+      .leftJoinAndSelect('post.author', 'user', 'post.author = user.id')
       .where('like.user = :userId', { userId })
       .andWhere('post.mode = :mode', { mode })
       .take(perPage)
       .skip(perPage * (page - 1))
+      .loadAllRelationIds({
+        relations: ['id'],
+      })
       .getManyAndCount();
     return hideLinkResultList(
       result.map((like) => like.post) as PostEntity[],

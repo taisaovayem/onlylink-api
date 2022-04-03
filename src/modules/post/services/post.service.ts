@@ -175,7 +175,7 @@ export class PostService {
     );
     return {
       data: await Promise.all(
-        posts.data.map(async (post) => await this.mapPost(post)),
+        posts.data.map(async (post: PostEntity) => await this.mapPost(post)),
       ),
       total: posts.total,
     };
