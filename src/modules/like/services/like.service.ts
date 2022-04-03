@@ -30,7 +30,6 @@ export class LikeService {
   }
 
   async likeUnlike(postId: string, userId: string) {
-    console.log('aaa', this.likeRepository);
     const liked = await this.likeRepository.findOne({
       where: {
         user: userId,
