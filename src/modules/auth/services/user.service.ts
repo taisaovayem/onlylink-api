@@ -68,7 +68,13 @@ export class UserService {
       ...tokenRecord,
       expired: add(new Date(), { days: 30 }),
     });
-    return { accessToken: token };
+    const user = await this.userRepository.findOne(tokenRecord.user.id);
+    return {
+      email: user.email,
+      name: user.name,
+      accessToken: token,
+      refreshToken,
+    };
   }
 
   async register({ email, name, password }: RegisterRequest) {
