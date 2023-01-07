@@ -6,7 +6,7 @@ Onlylink
 
 ```bash
 $ docker run --name postgres -e POSTGRES_PASSWORD=changeme -p 5432:5432 -d postgres
-$ docker run --name redis -6379:6379 -d redis
+$ docker run --name redis -p 6379:6379 -d redis
 ```
 Login in to database and create a database
 
@@ -15,20 +15,20 @@ Copy `.env.example` to `.env` and fill information
 ## Installation
 
 ```bash
-$ npm install
+$ yarn install
 ```
 
 ## Running the app
 
 ```bash
 # development
-$ npm run start
+$ yarn start
 
 # watch mode
-$ npm run start:dev
+$ yarn start:dev
 
 # production mode
-$ npm run start:prod
+$ yarn start:prod
 ```
 
 ## Test

@@ -13,6 +13,7 @@ async function bootstrap() {
   );
   app.setGlobalPrefix('api');
   app.enableVersioning();
+  app.enableCors();
   const configService = app.get(ConfigService);
   await app.listen(configService.get('PORT') | 3000);
 }
