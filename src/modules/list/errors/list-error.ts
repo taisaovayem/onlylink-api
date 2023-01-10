@@ -47,3 +47,9 @@ export class NotFoundError extends ApiError {
     super({ status: 404, message: 'Không tìm thấy danh sách' });
   }
 }
+
+export class NotFoundPostError extends ApiError {
+  constructor() {
+    super({ status: 404, message: 'Không tìm thấy giáo án' });
+  }
+}

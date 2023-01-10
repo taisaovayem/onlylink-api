@@ -63,7 +63,8 @@ export class UserService {
     if (tokenRecord.expired < new Date()) return new InvalidSessionException();
     const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
     const token = jwt.sign({ id: tokenRecord.user.id }, jwtPrivateKey);
-    await this.cacheService.set(token, JSON.stringify(tokenRecord.user));
+    const userInfo = { userId:tokenRecord.user.id };
+    await this.cacheService.setObject(token, userInfo);
     await this.refreshTokenRepository.save({
       ...tokenRecord,
       expired: add(new Date(), { days: 30 }),
@@ -110,7 +111,6 @@ export class UserService {
       email,
     });
     if (user && (await argon2.verify(user.password, password))) {
-      const jwtPrivateKey = this.configService.get('JWT_PRIVATE_KEY');
       const { token, refreshToken } = await this.generateToken(user);
       const reponse: UserResponse = {
         email: user.email,

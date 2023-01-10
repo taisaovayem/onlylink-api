@@ -18,6 +18,8 @@ import {
   NotPermissonDeleteError,
 } from '../errors';
 import { getUserInfo } from 'src/modules/auth/helpers';
+import { ListItemRepository } from 'src/modules/list/repositories';
+import { ListItemEntity } from 'src/modules/list/entities';
 
 const CACHE_5_MINUTES = 5;
 
@@ -53,6 +55,11 @@ export class PostService {
     return this.pgTransactionRepo.getRepository<UserEntity>(
       UserRepository,
     ) as UserRepository;
+  }
+  get listItemRepository(): ListItemRepository {
+    return this.pgTransactionRepo.getRepository<ListItemEntity>(
+      ListItemRepository,
+    ) as ListItemRepository;
   }
 
   async mapPost(post: PostEntity) {
@@ -241,6 +248,10 @@ export class PostService {
     }
     if (post) this.cacheService.delete(`post_${postId}`);
     const deleted = await this.postRepository.deletePost(postId);
+    /** Delete post from list */
+    await this.listItemRepository.softDelete({
+      post,
+    });
     if (deleted.affected === 1) {
       return { status: 200, message: 'Xóa thành công' };
     } else {

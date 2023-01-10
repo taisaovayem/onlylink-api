@@ -14,6 +14,7 @@ import {
   AddToListError,
   DeleteListError,
   NotFoundError,
+  NotFoundPostError,
   NotPermissonAddToListError,
   NotPermissonDeleteListError,
   NotPermissonEditListError,
@@ -132,12 +133,14 @@ export class ListService {
     if (!list) return new NotFoundError();
     if (list.user.id !== userId) return new NotPermissonAddToListError();
     const post = await this.postRepository.findOne(postId);
+    if (!post) return new NotFoundPostError();
     const listItem = await this.listItemRepository.findOne({
       where: { post, list },
     });
     if (listItem) {
       const result = await this.listItemRepository.removeFromList(post, list);
-      if (result.affected === 1) {
+      console.log('result', result);
+      if (result.affected >= 1) {
         return { status: 200 };
       }
       return new AddToListError();

@@ -25,6 +25,9 @@ export class ListRepository extends BaseRepository<ListEntity> {
           user,
         },
         relations: ['user'],
+        order: {
+          createdAt: 'DESC',
+        }
       });
       return {
         data: result,

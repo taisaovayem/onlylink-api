@@ -8,7 +8,7 @@ export class UnauthorizedException extends ApiError {
 
 export class InvalidSessionException extends ApiError {
   constructor() {
-    super({ status: 403, message: 'Phiên đăng nhập không hợp lệ' });
+    super({ status: 401, message: 'Phiên đăng nhập không hợp lệ' });
   }
 }
 
